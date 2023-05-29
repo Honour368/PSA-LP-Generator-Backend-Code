@@ -1,1 +1,3 @@
-web: node app.js --timeout 60000
+web: node app.js
+queryWorker: node queryWorker.js
+resubmitWorker: node resubmitWorker.js
