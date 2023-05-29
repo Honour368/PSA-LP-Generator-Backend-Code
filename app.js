@@ -11,19 +11,21 @@ const openAi = new OpenAIApi(new Configuration({
 var cors = require('cors');
 var express = require('express');
 var path = require('path');
-const serverless = require('serverless-http');
 var app = express();
 
-const router = express.Router();
+// const corsOptions ={
+//     origin:'http://localhost:5173', 
+//     credentials:true,            //access-control-allow-credentials:true
+//     optionSuccessStatus:200
+// }
+// app.use(cors(corsOptions));
 
-const corsOptions ={
-    origin:'http://localhost:5173', 
-    credentials:true,            //access-control-allow-credentials:true
-    optionSuccessStatus:200
-}
-app.use(cors(corsOptions));
-
-app.use(cors());
+app.use((req, res, next)=>{
+    res.setHeader("Access-Control-Allow-Origin", "https://localhost:5173");
+    res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    next();
+});
 // app.use(express.bodyParser());
 
 app.use(express.json());
