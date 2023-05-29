@@ -1,24 +1,11 @@
-const { Configuration, OpenAIApi} = require("openai");
+const {Worker, workerData} = require("worker_threads");
 // const {config} = require("dotenv")
 require("dotenv").config();
-
-const openAi = new OpenAIApi(new Configuration({
-  // apiKey: "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",
-  apiKey: process.env.API_KEY,
-})
-)
 
 var cors = require('cors');
 var express = require('express');
 var path = require('path');
 var app = express();
-
-// const corsOptions ={
-//     origin:'http://localhost:5173', 
-//     credentials:true,            //access-control-allow-credentials:true
-//     optionSuccessStatus:200
-// }
-// app.use(cors(corsOptions));
 
 app.use((req, res, next)=>{
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -40,7 +27,7 @@ app.get('/', (req,res)=>{
   });
 })
 
-app.put('/query', async function (req, res) {
+app.put('/query', function (req, res) {
   var subject = req.body["prompt[subject]"]
   var grade = req.body["prompt[grade]"]
   var topic = req.body["prompt[topic]"]
@@ -79,21 +66,16 @@ app.put('/query', async function (req, res) {
   let promptFill = `You are a school teacher who wants to design a lesson plan. Design a sample ${subject} lesson plan for grade ${grade} students focusing on ${topic} as the topic and ${subtopic} as the subtopic. The module is ${weeks} weeks long and must meet ${lesson_no} days per week and must have a total of exactly ${lesson_mins} minutes per lesson. The module's learning objectives are ${learning_objectives}. The generated lesson plan must include a rundown of the lesson, lesson objectives, activities and material lists. ${activities}. ${additional_notes}`;
   let promptFillOutput = `You are a school teacher who wants to design a lesson plan. Design a sample \${${subject}} lesson plan for grade \${${grade}} students focusing on \${${topic}} as the topic and \${${subtopic}} as the subtopic. The module is \${${weeks}} weeks long and must meet \${${lesson_no}} days per week and must have a total of exactly \${${lesson_mins}} minutes per lesson. The module's learning objectives are \${${learning_objectives}}. The generated lesson plan must include a rundown of the lesson, lesson objectives, activities and material lists. ${activities}. ${additional_notes}`;
   let prompt = promptFill + ' Your output string must strictly have this JSON format: {"Week x Day x": {"title": "..", "objective": "..", "activity": "1. .. (xx mins) \\n", "material list": "1. .. \\n"}}. The JSON output must be able to be parsed in express js.'
-  let promptOutput = promptFillOutput + ' Your output string must strictly have this unparsed JSON format: {"Week x Day x": {"title": "..","objective": "..","activity": "1. .. (xx mins) \\n", "material list": "1. .. \\n"}}. The JSON output must be able to be parsed in express js.'
+  let promptOutput = promptFillOutput + ' Your output string must strictly have this unparsed JSON format: {"Week x Day x": {"title": "..","objective": "..","activity": "1. .. (xx mins) \\n", "material list": "1. .. \\n"}}. You must not add any comments. The JSON output must be able to be parsed in express js.'
+//   console.log(promptOutput)
 
-  let promptObj = {"prompt": prompt, "response":{}}  //to be sent back to frontend
-  console.log(promptOutput)
-  chatGPTResponse = await openAi.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-    }).then((response)=>{
-      console.log(typeof response.data.choices[0].message.content);
-      promptObj["response"] = JSON.parse(response.data.choices[0].message.content);
-      res.header('Access-Control-Allow-Origin', '*');
-      res.send(promptObj);
-      console.log("Response sent!")
-    })
+  const worker = new Worker ('./queryWorker.js', {workerData: prompt})
+  worker.on('message', (response)=>{
+    res.header('Access-Control-Allow-Origin', '*');
+    res.send(response);
+    console.log("Response sent!")
   })
+})
 
 app.post('/resubmit', async function (req, res) {
   var prompt=" You must keep";
@@ -104,17 +86,15 @@ app.post('/resubmit', async function (req, res) {
   }
   prompt = prompt.substring(0, prompt.lastIndexOf(" "))
   var completePrompt = initialPrompt + prompt
-  console.log(completePrompt);
+//   console.log(completePrompt);
 
-  let promptObj = {"prompt": initialPrompt, "response":{}}  //to be sent back to frontend
-  chatGPTResponse = await openAi.createChatCompletion({
-    model: "gpt-3.5-turbo",
-    messages: [{ role: "user", content: completePrompt }],
-  }).then((response)=>{
-    console.log(typeof response.data.choices[0].message.content);
-    promptObj["response"] = JSON.parse(response.data.choices[0].message.content);
+  const worker = new Worker ('./resubmitWorker.js', {workerData: {
+    initial: initialPrompt,
+    final: completePrompt}
+    })
+  worker.on('message', (response)=>{
     res.header('Access-Control-Allow-Origin', '*');
-    res.send(promptObj);
+    res.send(response);
     console.log("Response sent!")
   })
 })
