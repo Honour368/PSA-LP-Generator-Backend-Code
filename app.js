@@ -1,6 +1,7 @@
-const {Worker, workerData} = require("worker_threads");
+// const {Worker, workerData} = require("worker_threads");
 // const {config} = require("dotenv")
 require("dotenv").config();
+const Redis = require('ioredis');
 
 var cors = require('cors');
 var express = require('express');
@@ -20,9 +21,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ strict: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const Redis = require('ioredis');
-const redisQuery = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
-const redisResubmit = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const redisQuery = new Redis(process.env.REDIS_URL);
+const redisResubmit = new Redis(process.env.REDIS_URL);
 // Subscribe to the channel
 const channelQuery = 'processedQueryDataChannel';
 const channelResubmit = 'processedResubmitDataChannel';
