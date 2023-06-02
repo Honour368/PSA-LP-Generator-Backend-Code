@@ -2,7 +2,7 @@
 const { Configuration, OpenAIApi} = require("openai");
 require("dotenv").config();
 const Redis = require('ioredis');
-const redis = new Redis(process.env.REDISCLOUD_URL);
+const redis = new Redis(process.env.REDIS_URL);
 
 
 const openAi = new OpenAIApi(new Configuration({

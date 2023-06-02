@@ -21,8 +21,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ strict: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const redisQuery = new Redis(process.env.REDISCLOUD_URL);
-const redisResubmit = new Redis(process.env.REDISCLOUD_URL);
+const redisQuery = new Redis(process.env.REDIS_URL);
+const redisResubmit = new Redis(process.env.REDIS_URL);
 // Subscribe to the channel
 const channelQuery = 'processedQueryDataChannel';
 const channelResubmit = 'processedResubmitDataChannel';
