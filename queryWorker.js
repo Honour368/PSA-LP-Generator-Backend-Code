@@ -37,4 +37,5 @@ async function startWorker() {
   }
 }
 
+console.log("Query Worker Called")
 startWorker();

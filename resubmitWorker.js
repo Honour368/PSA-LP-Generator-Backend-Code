@@ -53,4 +53,5 @@ async function startWorker() {
   }
 }
 
+console.log("Resubmit Worker Called")
 startWorker();
