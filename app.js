@@ -1,7 +1,6 @@
 const {Worker, workerData} = require("worker_threads");
 // const {config} = require("dotenv")
 require("dotenv").config();
-// const Redis = require('ioredis');
 
 var cors = require('cors');
 var express = require('express');
@@ -20,38 +19,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ strict: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// const redisQuery = new Redis(process.env.REDIS_URL);
-// const redisResubmit = new Redis(process.env.REDIS_URL);
-// // Subscribe to the channel
-// const channelQuery = 'processedQueryDataChannel';
-// const channelResubmit = 'processedResubmitDataChannel';
-
-// // Enqueue a job
-// function enqueueJob(job, redis) {
-//   redis.lpush('jobQueue', JSON.stringify(job));
-// }
-
-// function redisSubcribe(redisName, channelName) {
-//   redisName.subscribe(channelName, (err, count) => {
-//     if (err) {
-//       console.error('Error subscribing to channel:', err);
-//     } else {
-//       console.log(`Subscribed to ${channelName} channel`);
-//     }
-//   });
-  
-//   // Handle received messages
-//   redisName.on('message', (channel, message) => {
-//     if (channel === 'processedQueryDataChannel') {
-//       // Process the received data in your main server app
-//       console.log('Received processed data:', message);
-//       // Perform further actions with the data
-
-//       //figure out how to send the message back to frontend!
-//     }
-//   })
-// }
 
 app.get('/', (req,res)=>{
   console.log("Hello World!")
@@ -103,14 +70,6 @@ app.put('/query', async function (req, res) {
   let promptOutput = promptFillOutput + ' Your output string must strictly have this unparsed JSON format: {"Week x Day x": {"title": "..","objective": "..","activity": "1. .. (xx mins) \\n", "material list": "1. .. \\n"}}. You must not add any comments. The JSON output must be able to be parsed in express js.'
 //   console.log(promptOutput)
 
-
-  // // Example usage
-  // enqueueJob({ data: prompt}, redisQuery);
-  // redisSubcribe(redisQuery, channelQuery);
-
-  // let job = await workQueue.add();
-  // res.json({id: job.id})
-
   res.writeHead(200, {
     'Content-Type': 'application/octet-stream',
     'Access-Control-Allow-Origin': '*',
@@ -118,22 +77,13 @@ app.put('/query', async function (req, res) {
   })
 
   res.write('Hello World');
-  var responseSent = false;
 
   const worker = new Worker ('./queryWorker.js', {workerData: prompt})
   worker.on('message', (response)=>{
-    // res.header('Access-Control-Allow-Origin', '*');
     res.write(JSON.stringify(response));
-    responseSent = true;
     res.end();
     console.log("Response sent!")
   })
-
-  // for(var count=0; count<100; count++) {
-  //   if (count == 99 && !responseSent){
-  //     res.write("Hello World")
-  //   }
-  // }
 })
 
 app.post('/resubmit', async function (req, res) {
@@ -147,18 +97,13 @@ app.post('/resubmit', async function (req, res) {
   var completePrompt = initialPrompt + prompt
 //   console.log(completePrompt);
 
-  // enqueueJob({ data: {
-  //   initial: initialPrompt,
-  //   final: completePrompt
-  // }}, redisResubmit);
-  // redisSubcribe(redisResubmit, channelResubmit);
-
   res.writeHead(200, {
     'Content-Type': 'application/octet-stream',
+    'Access-Control-Allow-Origin': '*',
     'Transfer-Encoding': 'chunked'
   })
 
-  res.write(' ');
+  res.write('Hello World');
 
   const worker = new Worker ('./resubmitWorker.js', {workerData: {
     initial: initialPrompt,
@@ -166,8 +111,8 @@ app.post('/resubmit', async function (req, res) {
     })
 
   worker.on('message', (response)=>{
-    res.header('Access-Control-Allow-Origin', '*');
-    res.send(response);
+    res.write(JSON.stringify(response));
+    res.end();
     console.log("Response sent!")
   })
 })
