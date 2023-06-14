@@ -143,7 +143,7 @@ app.put('/query', async function (req, res) {
     'Transfer-Encoding': 'chunked'
   })
   // res.write("Hello World")
-  // res.write(prompt)
+  res.write(prompt)
     
   fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
